@@ -9,13 +9,15 @@ def pointOut(a,b,c):
    o = v + w
    o = o / math.sqrt(o.dot(o))
 
+   assert 0.9 < math.sqrt(v.dot(v)) < 1.1, repr(v) + repr([a,b])
+   assert 0.9 < math.sqrt(w.dot(w)) < 1.1, repr(w) + repr([c,b])
    # |v| = |w| = 1
-   cosVW = abs(np.cross(v,w)[2])
+   cosVW = v.dot(w)
 
-   #TODO: Check that cosVW is big enough, we might be on straight line
+   # Half the angle
+   cosVWhalf = math.sqrt((cosVW+1)/2)
 
-   o/= cosVW
-
+   o/= cosVWhalf
 
    z = np.array([0,0,1])
    if z.dot(np.cross(v,o)) < 0:
