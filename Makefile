@@ -3,7 +3,7 @@ all: julgran.view
 
 .PHONY:
 %.view:%.stl
-	meshlab $^
+	meshlab $^ 2> /dev/null
 
 %.stl:%.py
 	python $<
