@@ -16,8 +16,9 @@ def pointOut(a,b,c):
 
    # Half the angle
    cosVWhalf = math.sqrt((cosVW+1)/2)
+   sinVWhalf = math.sqrt(1 - cosVWhalf*cosVWhalf)
 
-   o/= cosVWhalf
+   o/= sinVWhalf
 
    z = np.array([0,0,1])
    if z.dot(np.cross(v,o)) < 0:
