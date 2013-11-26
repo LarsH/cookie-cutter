@@ -1,5 +1,7 @@
+IMAGES:=$(shell ls *.jpg)
+VIEWS:=$(IMAGES:%.jpg=%.view)
 
-all: julgran.view
+all: $(VIEWS)
 
 .PHONY:
 %.view:%.stl
@@ -7,6 +9,9 @@ all: julgran.view
 
 %.stl:%.py
 	python $<
+
+%.stl:%.jpg
+	python stlFromImage.py $< $@
 
 .PHONY:
 clean:
