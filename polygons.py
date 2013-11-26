@@ -9,6 +9,7 @@ def pointOut(a,b,c):
    o = v + w
    o = o / math.sqrt(o.dot(o))
 
+   assert 0.9 < math.sqrt(o.dot(o)) < 1.1, repr([v,w]) + repr([a,b,c])
    assert 0.9 < math.sqrt(v.dot(v)) < 1.1, repr(v) + repr([a,b])
    assert 0.9 < math.sqrt(w.dot(w)) < 1.1, repr(w) + repr([c,b])
    # |v| = |w| = 1
@@ -26,6 +27,37 @@ def pointOut(a,b,c):
       o = -o
 
    return o
+
+def getMaxForSegment(a,b,c,d):
+   "Returns: the maximal expansion distance that this foursegment can handle"
+   [a,b,c,d] = [np.array([i,j,0]) for i,j in [a,b,c,d]]
+   r = c - b
+   u = pointOut(a,b,c)
+   v = pointOut(b,c,d)
+   # u and v are not parallell
+   # r is parallell to u-v
+
+   # Draw the vectors if you forgot how it works
+   k = r.dot(r) / (r.dot(u-v))
+   return k
+
+def getMaxExpand(l1):
+   l2 = l1[1:] + l1[:1]
+   l3 = l2[1:] + l2[:1]
+   l4 = l3[1:] + l3[:1]
+
+   mi, ma = None, None
+
+   for a,b,c,d in zip(l1,l2,l3,l4):
+      k = getMaxForSegment(a,b,c,d)
+      if abs(k) > 1000000:
+         continue
+      if mi == None or k < mi:
+         mi = k
+      if ma == None or k > ma:
+         ma = k
+
+   return mi, ma
 
 def expandPolygon(l,width):
    """2d to 2d"""

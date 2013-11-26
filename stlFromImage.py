@@ -6,6 +6,7 @@ import numpy, Image
 
 import stl
 from polygons import drawLists, expandPolygon
+import polygons
 
 def show(im):
    """Shows a numpy array image"""
@@ -42,10 +43,10 @@ def getNeighbour(edgeIm, x,y):
    starting from top right going down line by line
    returns None, None if no neighbour is found
    """
-   edgeIm[y,x] = False
+   edgeIm[x,y] = False
    for i in range(-1,2)[::-1]:
       for j in range(-1,2)[::-1]:
-         if edgeIm[y+i,x+j]:
+         if edgeIm[x+j,y+i]:
             return x+j, y+i
    return None, None
 
@@ -68,7 +69,7 @@ def getBorderLists(edgeIm):
    xs, ys = edgeIm.shape
    for y in range(ys):
       for x in range(xs):
-         if edgeIm[y,x]:
+         if edgeIm[x,y]:
             l = []
             while True:
                l += [(x,y)]
@@ -81,23 +82,45 @@ def getBorderLists(edgeIm):
 
 def drawCutter(s, l):
 
-   d = 1
-   h = 2
-   a = 10
-   b = 5
-   '''
+   d = 10
+   h = 15
+   a = 60
+   b = 10
+   print polygons.getMaxExpand(l)
    lo = expandPolygon(l, d)
    lo2 = expandPolygon(lo,b)
    drawLists(s,lo,0, l,-h)
-   '''
    drawLists(s,l,-h, l,a-h)
-   '''
    drawLists(s,l,a-h, lo2,a-h)
    drawLists(s,lo2,a-h, lo2,a-h-d)
    drawLists(s,lo2,a-h-d, lo,a-h-d)
    drawLists(s,lo,a-h-d, lo,0)
-   '''
 
+def removeStraightSections(l):
+   ret = []
+
+   # Initial dx/dy is take from last element to the first
+   dx = l[0][0] - l[-1][0]
+   dy = l[0][1] - l[-1][1]
+
+   for a,b in zip(l, l[1:]+l[:1]):
+      ndx = b[0] - a[0]
+      ndy = b[1] - a[1]
+      #print ndx, ndy, dx, dy
+      if ndx == 0 and dx == 0:
+         if ndy * dy > 0:
+            continue
+      elif ndy == 0 and dy == 0:
+         if ndx * dx > 0:
+            continue
+      elif ndy * dx == dy * ndx:
+         continue
+
+      dx = ndx
+      dy = ndy
+      ret += [a]
+
+   return ret
 
 def main(imname, outputFile):
    print "Loading image..."
@@ -123,7 +146,11 @@ def main(imname, outputFile):
    #show(255*(edge))
    bl = getBorderLists(edge)
 
-   # TODO: remove straight parts
+   # The first border is the outer one, the following are holes and should
+   # be reversed
+   bl = bl[:1] + [l[::-1] for l in bl[1:]]
+
+   bl = map(removeStraightSections, bl)
 
    s = stl.StlObject()
    for l in bl:
