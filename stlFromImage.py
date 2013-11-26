@@ -26,9 +26,9 @@ def calculateThreshold(arr):
 
 def binarize(im):
    """Converts an intensity image to binary"""
-   back = ndimage.gaussian_filter(im, sigma=40)
+   #back = ndimage.gaussian_filter(im, sigma=40)
 
-   norm = im.astype(numpy.float) - back
+   norm = im.astype(numpy.float) # - back
    norm = 255*((norm - norm.min())/(norm.max()-norm.min()))
    norm = norm.astype(numpy.uint8)
 
@@ -111,8 +111,10 @@ def main(imname, outputFile):
    larger[5:-5,5:-5] = bim
 
    t = ndimage.binary_dilation(larger)
-   t = ndimage.binary_dilation(t)
-   t = ndimage.binary_dilation(t)
+   for i in range(17):
+      t = ndimage.binary_dilation(t)
+   for i in range(6):
+      t = ndimage.binary_erosion(t)
    t2 = ndimage.binary_erosion(t)
 
    edge = t-t2
