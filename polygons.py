@@ -42,22 +42,28 @@ def getMaxForSegment(a,b,c,d):
    return k
 
 def getMaxExpand(l1):
+   '''Returns the maximum distance that l1 can be expanded, or None if l1 can
+   be expanded to infinity without collisions'''
    l2 = l1[1:] + l1[:1]
    l3 = l2[1:] + l2[:1]
    l4 = l3[1:] + l3[:1]
 
-   mi, ma = None, None
+   mx = None
 
    for a,b,c,d in zip(l1,l2,l3,l4):
       k = getMaxForSegment(a,b,c,d)
       if abs(k) > 1000000:
+         # We got a zig-zag pattern. Ignore.
          continue
-      if mi == None or k < mi:
-         mi = k
-      if ma == None or k > ma:
-         ma = k
+      if k < 0:
+         # Convex pattern is ok
+         continue
+      else:
+         # Concave pattern
+         if mx == None or k < mx:
+            mx = k
 
-   return mi, ma
+   return mx
 
 def expandPolygon(l,width):
    """2d to 2d"""
