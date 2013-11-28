@@ -64,4 +64,27 @@ print "getMaxExpand"
 l1 = [(0,0), (1,0), (1,1), (0,1)]
 print getMaxExpand(l1)
 
+
+
+from stlFromImage import getNeighbour
+import numpy as np
+e = np.zeros((3,3), np.bool)
+# e[y,x]
+e[1,1] = True
+e[2,0] = True
+e[1,2] = True
+p = getNeighbour(e,1,1)
+assert p == (2,1)
+
+e = np.zeros((3,3), np.bool)
+# e[y,x]
+e[1,1] = True
+e[2,0] = True
+e[2,2] = True
+p = getNeighbour(e,1,1)
+assert p == (2,2)
+
+
 print "All tests done"
+
+

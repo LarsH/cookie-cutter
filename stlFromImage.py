@@ -43,10 +43,10 @@ def getNeighbour(edgeIm, x,y):
    starting from top right going down line by line
    returns None, None if no neighbour is found
    """
-   edgeIm[x,y] = False
-   for i in range(-1,2)[::-1]:
+   edgeIm[y,x] = False
+   for i in range(-1,2):
       for j in range(-1,2)[::-1]:
-         if edgeIm[x+j,y+i]:
+         if edgeIm[y+i,x+j]:
             return x+j, y+i
    return None, None
 
@@ -69,13 +69,16 @@ def getBorderLists(edgeIm):
    xs, ys = edgeIm.shape
    for y in range(ys):
       for x in range(xs):
-         if edgeIm[x,y]:
+         if edgeIm[y,x]:
             l = []
             while True:
                l += [(x,y)]
                x,y = getNeighbour(edgeIm, x,y)
+               # XXX something is wrong here, the border gets traversed
+               # in the wrong direction. Fixing by returning the reverse of l
                if x == None:
-                  return [l] + getBorderLists(edgeIm)
+                  # XXX hotfix with [::-1]
+                  return [l[::-1]] + getBorderLists(edgeIm)
    # No edges left
    return []
 
