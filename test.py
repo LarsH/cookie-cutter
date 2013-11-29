@@ -53,11 +53,19 @@ l2 = [(293, 8), (292, 9), (286, 9), (285, 10), (284, 10), (303, 8)]
 l3 = removeStraightSections(l1)
 print compare(l3, l2)
 l1 = [(293, 66), (335, 66), (336, 67), (280, 67), (291, 67), (292, 66)]
-l2 = [(335, 66), (336, 67), (280, 67), (291, 67), (292, 66)]
+l2 = [(335, 66), (336, 67), (291, 67), (292, 66)]
 l3 = removeStraightSections(l1)
+print l1
+print l2
+print l3
 print compare(l3, l2)
 
 
+# This case can occur in concave sections... 
+l1 = [(0,1), (1,1), (1,2), (1,0), (0,0)]
+l2 = [(0,1), (1,1), (1,0), (0,0)]
+l3 = removeStraightSections(l1)
+print compare(l3, l2)
 
 from polygons import getMaxExpand
 print "getMaxExpand"
