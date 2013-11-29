@@ -2,8 +2,13 @@ import math
 import numpy as np
 
 def pointOut(a,b,c):
+   z = np.array([0,0,1])
+
    v = b-a
    w = b-c
+
+   assert abs(z.dot(np.cross(v,w))) > 0.000001, "Got a straight segment! %r"%[a,b,c]
+
    v = v / math.sqrt(v.dot(v))
    w = w / math.sqrt(w.dot(w))
    o = v + w
@@ -21,7 +26,6 @@ def pointOut(a,b,c):
 
    o/= sinVWhalf
 
-   z = np.array([0,0,1])
    if z.dot(np.cross(v,o)) < 0:
       # Concave part here...
       o = -o
@@ -36,6 +40,10 @@ def getMaxForSegment(a,b,c,d):
    v = pointOut(b,c,d)
    # u and v are not parallell
    # r is parallell to u-v
+
+   # Extreme case, u and v _are_ parallell; a-b-c-d goes in a zig-zag pattern
+   if abs( r.dot(u-v)) < 0.0000001:
+      return np.inf
 
    # Draw the vectors if you forgot how it works
    k = r.dot(r) / (r.dot(u-v))
