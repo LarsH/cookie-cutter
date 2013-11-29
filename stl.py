@@ -47,8 +47,10 @@ class StlObject():
          self.facets = stl[1]
 
    def __iadd__(self, facet):
-      "Adds a facet to the object. The normal points according to the right\
-      hand rule, add vertices counter-clockwise for an upwards pointing normal"
+      """
+      Adds a facet to the object. The normal points according to the right\
+      hand rule, add vertices counter-clockwise for an upwards pointing normal
+      """
 
       assert len(facet) == 3, "Facet does not have three corners"
       for v in facet:
@@ -58,8 +60,9 @@ class StlObject():
       v = b-a
       w = c-a
       n = np.cross(v,w)
-      n = n / math.sqrt(n.dot(n))
-      self.facets += [(n,a,b,c)]
+      if n.dot(n) > 0.000001:
+         n = n / math.sqrt(n.dot(n))
+         self.facets += [(n,a,b,c)]
       return self
 
    def save(self,filename):
