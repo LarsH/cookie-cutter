@@ -111,11 +111,9 @@ def removeStraightSections(l):
       ndy = b[1] - a[1]
       #print ndx, ndy, dx, dy
       if ndx == 0 and dx == 0:
-         if ndy * dy > 0:
-            continue
+         continue
       elif ndy == 0 and dy == 0:
-         if ndx * dx > 0:
-            continue
+         continue
       elif ndy * dx == dy * ndx:
          continue
 
@@ -123,7 +121,13 @@ def removeStraightSections(l):
       dy = ndy
       ret += [a]
 
-   return ret
+   if len(l) != len(ret):
+      # Solve problem with this type:
+      #\   +   /    \        /
+      # +--+--+   -> +------+
+      return removeStraightSections(ret)
+   else:
+      return ret
 
 def main(imname, outputFile):
    print "Loading image..."
