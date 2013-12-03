@@ -4,8 +4,8 @@ import numpy as np
 def pointOut(a,b,c):
    z = np.array([0,0,1])
 
-   v = b-a
-   w = b-c
+   v = (b-a).astype(np.float)
+   w = (b-c).astype(np.float)
 
    assert abs(z.dot(np.cross(v,w))) > 0.000001, "Got a straight segment! %r"%[a,b,c]
 
@@ -16,7 +16,7 @@ def pointOut(a,b,c):
 
    assert 0.9 < math.sqrt(o.dot(o)) < 1.1, repr([v,w]) + repr([a,b,c])
    assert 0.9 < math.sqrt(v.dot(v)) < 1.1, repr(v) + repr([a,b])
-   assert 0.9 < math.sqrt(w.dot(w)) < 1.1, repr(w) + repr([c,b])
+   assert 0.9 < math.sqrt(w.dot(w)) < 1.1, repr(w) + repr([c,b]) + repr(w.dot(w))
    # |v| = |w| = 1
    cosVW = v.dot(w)
 
@@ -34,7 +34,7 @@ def pointOut(a,b,c):
 
 def getMaxForSegment(a,b,c,d):
    "Returns: the maximal expansion distance that this foursegment can handle"
-   [a,b,c,d] = [np.array([i,j,0]) for i,j in [a,b,c,d]]
+   [a,b,c,d] = [np.array([i,j,0],np.float) for i,j in [a,b,c,d]]
    r = c - b
    u = pointOut(a,b,c)
    v = pointOut(b,c,d)
@@ -85,7 +85,7 @@ def expandPolygon(l,width):
 
       d = pointOut(a,b,c)
       o = b+width*d
-      lo += [(o[0], o[1])]
+      lo += [(int(o[0]), int(o[1]))]
 
    return lo
 

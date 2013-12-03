@@ -4,6 +4,9 @@ import scipy.misc.pilutil as pilutil
 from scipy import ndimage
 import numpy, Image
 
+
+globalScale = 10
+
 import stl
 from polygons import drawLists, expandPolygon
 import polygons
@@ -72,7 +75,7 @@ def getBorderLists(edgeIm):
          if edgeIm[y,x]:
             l = []
             while True:
-               l += [(x,y)]
+               l += [(x*globalScale,y*globalScale)]
                x,y = getNeighbour(edgeIm, x,y)
                # XXX something is wrong here, the border gets traversed
                # in the wrong direction. Fixing by returning the reverse of l
@@ -83,24 +86,102 @@ def getBorderLists(edgeIm):
    return []
 
 
+def removeDuplicates(l):
+   while len(l) > 1 and l[0] == l[-1]:
+      l = l[:-1]
+   r = l[:1]
+   for e in l[1:]:
+      if e != r[-1]:
+         r += [e]
+   return r
+
 def drawCutter(s, l):
-
+   '''
+   <-b-->
+   +----+   ^  ^
+   |    |   |  d
+   | +--+   |  V
+   | |      a
+   | |      |
+   | |      |
+   | /      | ^
+   |/       | h
+   /        v v
+   <d>
+   '''
    d = 10
-   h = 15
+   h = 20
    a = 60
-   b = 10
-   print polygons.getMaxExpand(l)
-   lo = expandPolygon(l, d)
-   lo2 = expandPolygon(lo,b)
-   drawLists(s,lo,0, l,-h)
-   drawLists(s,l,-h, l,a-h)
-   drawLists(s,l,a-h, lo2,a-h)
-   drawLists(s,lo2,a-h, lo2,a-h-d)
-   drawLists(s,lo2,a-h-d, lo,a-h-d)
-   drawLists(s,lo,a-h-d, lo,0)
+   b = 25 
+   assert h + d < a
+   assert d < b
+   scale = globalScale
+   [a,b,d,h] = [x*scale for x in [a,b,d,h]]
 
-def removeStraightSections(l):
+   # Draw first vertical part
+   drawLists(s,l,0,l,a)
+
+   t = 0 # how much we have expanded
+   last = removeStraightSections(l)
+   lastheight = 0 
+   while t < d:
+
+      e = polygons.getMaxExpand(last)
+      if e != None and e < (d-t):
+         # We are restricted
+         pass
+      else:
+         # We can go all way
+         e = d-t
+
+      nxt = (expandPolygon(last, e))
+      t += e
+
+      drawLists(s,last,a, nxt,a)
+
+      atheight = (float(t)/d) * h
+      drawLists(s,nxt,atheight,last,lastheight)
+      lastheight = atheight
+      last = removeStraightSections(nxt)
+
+   # loop done
+
+   # We are now expanded, draw second vertical part
+   drawLists(s,last,a-d,last,h)
+
+   t = d # how much we have expanded
+   # Our target is now b
+   while t < b:
+      e = polygons.getMaxExpand(last)
+      if e != None and e < (b-t):
+         # We are restricted
+         pass
+      else:
+         # We can go all way
+         e = b-t
+
+      #print 'last', last
+      nxt = expandPolygon(last, e)
+      #print 'nxt', nxt
+      t += e
+
+      drawLists(s,last,a, nxt,a)
+      drawLists(s,nxt,a-d,last,a-d)
+      last = removeStraightSections(nxt)
+      if len(nxt) < 3:
+         # We have expanded a concave part down to nothing, we are done
+         return
+
+   # Loop done
+
+   # We are now expanded, draw third and final vertical part
+   drawLists(s,last,a,last,a-d)
+
+def removeStraightSections(larg):
    ret = []
+   l = removeDuplicates(larg)
+   if len(l) < 3:
+      return []
 
    # Initial dx/dy is take from last element to the first
    dx = l[0][0] - l[-1][0]
@@ -109,18 +190,15 @@ def removeStraightSections(l):
    for a,b in zip(l, l[1:]+l[:1]):
       ndx = b[0] - a[0]
       ndy = b[1] - a[1]
-      #print ndx, ndy, dx, dy
-      if ndx == 0 and dx == 0:
-         continue
-      elif ndy == 0 and dy == 0:
-         continue
-      elif ndy * dx == dy * ndx:
+      #print repr(((ndx, ndy), (dx, dy))), ndy * dx == dy * ndx
+      if ndy * dx == dy * ndx:
          continue
 
       dx = ndx
       dy = ndy
       ret += [a]
 
+   ret = removeDuplicates(ret)
    if len(l) != len(ret):
       # Solve problem with this type:
       #\   +   /    \        /
@@ -137,16 +215,10 @@ def main(imname, outputFile):
    bim = -binarize(im)
 
    nshape = (bim.shape[0] + 10, bim.shape[1] + 10)
-   larger = numpy.zeros(nshape, numpy.bool)
-   larger[5:-5,5:-5] = bim
+   t = numpy.zeros(nshape, numpy.bool)
+   t[5:-5,5:-5] = bim
 
-   t = ndimage.binary_dilation(larger)
-   for i in range(17):
-      t = ndimage.binary_dilation(t)
-   for i in range(6):
-      t = ndimage.binary_erosion(t)
    t2 = ndimage.binary_erosion(t)
-
    edge = t-t2
 
    #show(255*(edge + larger))

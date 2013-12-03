@@ -57,8 +57,8 @@ class StlObject():
          assert len(v) == 3, "Corner in facet does not have three coordinates"
 
       a,b,c = map(np.array,facet)
-      v = b-a
-      w = c-a
+      v = (b-a).astype(np.float)
+      w = (c-a).astype(np.float)
       n = np.cross(v,w)
       if n.dot(n) > 0.000001:
          n = n / math.sqrt(n.dot(n))
