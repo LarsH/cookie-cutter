@@ -1,5 +1,5 @@
-IMAGES:=$(shell ls *.jpg)
-VIEWS:=$(IMAGES:%.jpg=%.view)
+IMAGES:=$(shell ls *.png)
+VIEWS:=$(IMAGES:%.png=%.view)
 
 all: $(VIEWS)
 
@@ -10,7 +10,7 @@ all: $(VIEWS)
 %.stl:%.py
 	python $<
 
-%.stl:%.jpg stlFromImage.py
+%.stl:%.png stlFromImage.py
 	python stlFromImage.py $< $@
 
 .PHONY:
