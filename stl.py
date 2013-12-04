@@ -56,6 +56,7 @@ class StlObject():
       for v in facet:
          assert len(v) == 3, "Corner in facet does not have three coordinates"
 
+      facet = [[e/100.0 for e in v] for v in facet]
       a,b,c = map(np.array,facet)
       v = (b-a).astype(np.float)
       w = (c-a).astype(np.float)
