@@ -5,7 +5,7 @@ from scipy import ndimage
 import numpy, Image
 
 
-globalScale = 10
+globalScale = 25
 
 import stl
 from polygons import drawLists, expandPolygon
@@ -110,7 +110,7 @@ def drawCutter(s, l):
    <d>
    '''
    d = 10
-   h = 20
+   h = 10
    a = 60
    b = 25
    assert h + d < a

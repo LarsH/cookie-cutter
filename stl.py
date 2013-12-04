@@ -61,7 +61,7 @@ class StlObject():
       v = (b-a).astype(np.float)
       w = (c-a).astype(np.float)
       n = np.cross(v,w)
-      if n.dot(n) > 0.000001:
+      if n.dot(n) != 0:
          n = n / math.sqrt(n.dot(n))
          self.facets += [(n,a,b,c)]
       return self
