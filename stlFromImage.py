@@ -112,18 +112,19 @@ def drawCutter(s, l):
    d = 10
    h = 20
    a = 60
-   b = 25 
+   b = 25
    assert h + d < a
    assert d < b
    scale = globalScale
    [a,b,d,h] = [x*scale for x in [a,b,d,h]]
 
    # Draw first vertical part
-   drawLists(s,l,0,l,a)
+   drawLists(s,l,0,l,d,[])
+   drawLists(s,l,d,l,a)
 
    t = 0 # how much we have expanded
    last = removeStraightSections(l)
-   lastheight = 0 
+   lastheight = a
    while t < d:
 
       e = polygons.getMaxExpand(last)
@@ -137,17 +138,17 @@ def drawCutter(s, l):
       nxt = (expandPolygon(last, e))
       t += e
 
-      drawLists(s,last,a, nxt,a)
+      drawLists(s,nxt,0, last,0)
 
-      atheight = (float(t)/d) * h
-      drawLists(s,nxt,atheight,last,lastheight)
+      atheight = a - (float(t)/d) * h
+      drawLists(s,last,lastheight,nxt,atheight,nxt)
       lastheight = atheight
       last = removeStraightSections(nxt)
 
    # loop done
 
    # We are now expanded, draw second vertical part
-   drawLists(s,last,a-d,last,h)
+   drawLists(s,last,a-h,last,d)
 
    t = d # how much we have expanded
    # Our target is now b
@@ -165,8 +166,8 @@ def drawCutter(s, l):
       #print 'nxt', nxt
       t += e
 
-      drawLists(s,last,a, nxt,a)
-      drawLists(s,nxt,a-d,last,a-d)
+      drawLists(s,nxt,0, last,0)
+      drawLists(s,last,d,nxt,d)
       last = removeStraightSections(nxt)
       if len(nxt) < 3:
          # We have expanded a concave part down to nothing, we are done
@@ -175,7 +176,7 @@ def drawCutter(s, l):
    # Loop done
 
    # We are now expanded, draw third and final vertical part
-   drawLists(s,last,a,last,a-d)
+   drawLists(s,last,d,last,0)
 
 def removeStraightSections(larg):
    ret = []
