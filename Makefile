@@ -10,7 +10,7 @@ all: $(VIEWS)
 %.stl:%.py
 	python $<
 
-%.stl:%.png stlFromImage.py
+%.stl:%.png stlFromImage.py polygons.py stl.py
 	python stlFromImage.py $< $@
 
 .PHONY:
