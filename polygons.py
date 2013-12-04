@@ -89,15 +89,20 @@ def expandPolygon(l,width):
 
    return lo
 
-def drawLists(stlobj, l1,z1, l2,z2):
-   """Accepts lists of 2d tuples"""
+def drawLists(stlobj, argl1,z1, argl2,z2, skipList=[]):
+   """Accepts lists of 2d tuples and heights
+   optionally, a skiplist can be added This is used when some intervals of
+   the list should be ommitted (leaving holes for the bridges)"""
 
-   l1 = [np.array([a,b,z1]) for (a,b) in l1]
-   l2 = [np.array([a,b,z2]) for (a,b) in l2]
+   l1 = [np.array([a,b,z1]) for (a,b) in argl1]
+   l2 = [np.array([a,b,z2]) for (a,b) in argl2]
 
    l1n = l1[1:] + l1[:1]
    l2n = l2[1:] + l2[:1]
 
-   for ((a,ao),(b,bo)) in zip(zip(l1,l1n),zip(l2,l2n)):
+   for (s1,(a,ao),s2,(b,bo)) in zip(argl1, zip(l1,l1n), argl2, zip(l2,l2n)):
+      if s1 in skipList and s2 in skipList:
+         # Skip internal interval, side connections are made -o-X X X-o-
+         continue
       stlobj += (a,bo,b)
       stlobj += (a,ao,bo)
