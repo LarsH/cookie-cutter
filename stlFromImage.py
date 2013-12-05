@@ -330,7 +330,7 @@ def main(imname, outputFile):
       drawCutter(s,l, avoidlist)
 
    for k in bridges:
-      print k
+      print "Drawing connection", k
       cut1, cut2 = bridges[k]
       # Labels use zero for background, numbering starts at one.
       # rebase to zero for the lists
@@ -342,18 +342,17 @@ def main(imname, outputFile):
       cutpixels_image *= (labelConns==k)
       pixellist = getPixels(cutpixels_image)
       #show(255*cutpixels_image)
-      print len(pixellist)
       #+++---  1
       #++---+  2
       #--+++-  3
       #---+++  4
-      # Four cases; Shift until to case 1 then strip the tail.
+      # Four cases; Shift to case 1 then strip the tail.
       def trimList(l, pl):
-         retval = [] 
+         retval = []
          s = l[-1] in pl
          for i,j in enumerate(l):
             if j in pl and not s:
-               retval = l[i:] + l[i:]
+               retval = l[i:] + l[:i]
                break
             s = j in pl
          for i,j in enumerate(retval):
