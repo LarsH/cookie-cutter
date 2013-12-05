@@ -100,6 +100,32 @@ def removeDuplicates(l):
          r += [e]
    return r
 
+def drawConnection(stlobj, p, l):
+   "Draws a connection from p to l"
+   d = 10
+   h = 10
+   a = 60
+   b = 25
+   assert h + d < a
+   assert d < b
+   scale = globalScale
+   [a,b,d,h] = [x*scale for x in [a,b,d,h]]
+
+
+   p1 = numpy.array([p[0],p[1],d])
+   p2 = numpy.array([p[0],p[1],0])
+   l1 = [numpy.array([x,y,d]) for (x,y) in l]
+   l2 = [numpy.array([x,y,0]) for (x,y) in l]
+
+   def f(stlobj, p, l):
+      for i,j in zip(l, l[1:]):
+         stlobj += (p,i,j)
+   stlobj += (p1, p2, l1[-1])
+   stlobj += (p2, l2[-1], l1[-1])
+   f(stlobj, p1,l1[::-1])
+   f(stlobj, p2,l2)
+
+
 def drawCutter(s, l, avoidlist=[]):
    '''
    <-b-->
@@ -302,6 +328,47 @@ def main(imname, outputFile):
    for i,l in enumerate(bl):
       print "Creating cut %u of %u..."%(i+1, len(bl))
       drawCutter(s,l, avoidlist)
+
+   for k in bridges:
+      print k
+      cut1, cut2 = bridges[k]
+      # Labels use zero for background, numbering starts at one.
+      # rebase to zero for the lists
+      l1 = bl[cut1-1]
+      l2 = bl[cut2-1]
+
+      # Get the set of pixels that should be used in the connection
+      cutpixels_image = (labelCuts==cut1) + (labelCuts==cut2)
+      cutpixels_image *= (labelConns==k)
+      pixellist = getPixels(cutpixels_image)
+      #show(255*cutpixels_image)
+      print len(pixellist)
+      #+++---  1
+      #++---+  2
+      #--+++-  3
+      #---+++  4
+      # Four cases; Shift until to case 1 then strip the tail.
+      def trimList(l, pl):
+         retval = [] 
+         s = l[-1] in pl
+         for i,j in enumerate(l):
+            if j in pl and not s:
+               retval = l[i:] + l[i:]
+               break
+            s = j in pl
+         for i,j in enumerate(retval):
+            if not j in pl:
+               retval = retval[:i]
+               break
+         return retval
+
+      l1 = trimList(l1, pixellist)
+      l2 = trimList(l2, pixellist)
+      for x in l1 + l2:
+         assert x in pixellist
+
+      drawConnection(s, l1[0], l2)
+      drawConnection(s, l2[0], l1)
 
    s.save(outputFile)
 
