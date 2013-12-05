@@ -5,6 +5,7 @@ from scipy import ndimage
 import numpy, Image
 
 
+ANSI_CURSOR_UP = "\033[1A"
 globalScale = 25
 
 import stl
@@ -14,6 +15,10 @@ import polygons
 def show(im):
    """Shows a numpy array image"""
    Image.fromarray(im.astype(numpy.uint8)).show()
+
+def showrgb(r,g,b):
+   arr = numpy.array([r,g,b]).swapaxes(0,2).swapaxes(0,1)
+   show(arr)
 
 def calculateThreshold(arr):
    """k-means threshold calculation for numpy arrray arr.
@@ -95,12 +100,12 @@ def removeDuplicates(l):
          r += [e]
    return r
 
-def drawCutter(s, l):
+def drawCutter(s, l, avoidlist=[]):
    '''
    <-b-->
    +----+   ^  ^
-   |    |   |  d
-   | +--+   |  V
+   X    |   |  d
+   + +--+   |  V
    | |      a
    | |      |
    | |      |
@@ -108,6 +113,8 @@ def drawCutter(s, l):
    |/       | h
    /        v v
    <d>
+
+   X is not drawn if current (x,y) is in avoidlist
    '''
    d = 10
    h = 10
@@ -119,14 +126,14 @@ def drawCutter(s, l):
    [a,b,d,h] = [x*scale for x in [a,b,d,h]]
 
    # Draw first vertical part
-   drawLists(s,l,0,l,d,[])
+   drawLists(s,l,0,l,d,avoidlist)
    drawLists(s,l,d,l,a)
 
    t = 0 # how much we have expanded
    last = removeStraightSections(l)
    lastheight = a
    while t < d:
-
+      print "Expansion 1, %3.2f%% done..."%(100*t/d), ANSI_CURSOR_UP
       e = polygons.getMaxExpand(last)
       if e != None and e < (d-t):
          # We are restricted
@@ -144,7 +151,7 @@ def drawCutter(s, l):
       drawLists(s,last,lastheight,nxt,atheight,nxt)
       lastheight = atheight
       last = removeStraightSections(nxt)
-
+   print
    # loop done
 
    # We are now expanded, draw second vertical part
@@ -153,6 +160,7 @@ def drawCutter(s, l):
    t = d # how much we have expanded
    # Our target is now b
    while t < b:
+      print "Expansion 2, %3.2f%% done..."%(100*(t-d)/(b-d)), ANSI_CURSOR_UP
       e = polygons.getMaxExpand(last)
       if e != None and e < (b-t):
          # We are restricted
@@ -172,7 +180,7 @@ def drawCutter(s, l):
       if len(nxt) < 3:
          # We have expanded a concave part down to nothing, we are done
          return
-
+   print
    # Loop done
 
    # We are now expanded, draw third and final vertical part
@@ -208,23 +216,81 @@ def removeStraightSections(larg):
    else:
       return ret
 
+def getPixels(im):
+   xs, ys = im.shape
+   l = []
+   for y in range(ys):
+      for x in range(xs):
+         if im[y,x]:
+            l += [(x*globalScale,y*globalScale)]
+   return l
+
 def main(imname, outputFile):
    print "Loading image..."
-   im = pilutil.fromimage(Image.open(imname).convert('I'))
+   rgbimage = Image.open(imname)
+   tmp = rgbimage.split()
+   tmp = map(pilutil.fromimage, tmp)
+
+   redband, greenband = tmp[:2] # ignore blue and alpha channel
 
    print "Binarizing..."
-   bim = -binarize(im)
+   bim = -binarize(redband)
+   connections = binarize(greenband)
+
+   # The cutterparts should not be included in the connection parts
+   connections *= bim
+
+   #show(255*bim)
 
    nshape = (bim.shape[0] + 10, bim.shape[1] + 10)
    t = numpy.zeros(nshape, numpy.bool)
    t[5:-5,5:-5] = bim
 
+   c = numpy.zeros(nshape, numpy.bool)
+   c[5:-5,5:-5] = connections
+
+
    t2 = ndimage.binary_erosion(t)
    edge = t-t2
 
-   #show(255*(edge + larger))
-   #show(255*(edge))
-   bl = getBorderLists(edge)
+   c2 = ndimage.binary_erosion(c)
+   connEdge = c-c2
+
+   sharedEdges = connEdge * edge
+
+   conn8 = [[1,1,1], [1,1,1],[1,1,1]]
+   (labelShared, nshared) = ndimage.measurements.label(sharedEdges, conn8)
+   (labelConns, nconns) = ndimage.measurements.label(c, conn8)
+   (labelCuts, ncuts) = ndimage.measurements.label(edge, conn8)
+
+   bridges = {}
+   for i in range(1,nshared+1):
+      mask = (labelShared == i)
+      cutindex = (labelCuts * mask).max()
+      connindex = (labelConns * mask).max()
+      if not connindex in bridges:
+         bridges[connindex] = [cutindex]
+      else:
+         bridges[connindex] += [cutindex]
+
+   for k in bridges:
+      assert len(bridges[k]) == 2, "A connection must have exactly two ends!"
+   '''
+   for arr in [labelShared, labelConns, labelCuts]:
+      sr = arr & 1
+      sg = arr & 2
+      sb = arr & 4
+      k  = 255
+      showrgb(k*sr, k*sg, k*sb)
+   '''
+
+   bl = []
+   for i in range(1, ncuts+1):
+      mask = (labelCuts == i)
+      bl += getBorderLists(mask)
+      #print map(len, bl)
+
+   avoidlist = getPixels(sharedEdges)
 
    # The first border is the outer one, the following are holes and should
    # be reversed
@@ -233,8 +299,10 @@ def main(imname, outputFile):
    bl = map(removeStraightSections, bl)
 
    s = stl.StlObject()
-   for l in bl:
-      drawCutter(s,l)
+   for i,l in enumerate(bl):
+      print "Creating cut %u of %u..."%(i+1, len(bl))
+      drawCutter(s,l, avoidlist)
+
    s.save(outputFile)
 
    return
