@@ -99,8 +99,10 @@ def drawLists(stlobj, argl1,z1, argl2,z2, skipList=[]):
 
    l1n = l1[1:] + l1[:1]
    l2n = l2[1:] + l2[:1]
+   argl1n = argl1[1:] + argl1[:1]
 
-   for (s1,(a,ao),s2,(b,bo)) in zip(argl1, zip(l1,l1n), argl2, zip(l2,l2n)):
+   for t in zip(zip(argl1,argl1n), zip(l1,l1n), zip(l2,l2n)):
+      (s1,s2), (a,ao), (b,bo) = t
       if s1 in skipList and s2 in skipList:
          # Skip internal interval, side connections are made -o-X X X-o-
          continue
