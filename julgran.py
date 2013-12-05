@@ -19,11 +19,12 @@ lo2 = expandPolygon(lo,b)
 
 s = stl.StlObject()
 
-drawLists(s,lo,0, l,-h)
-drawLists(s,l,-h, l,a-h)
-drawLists(s,l,a-h, lo2,a-h)
-drawLists(s,lo2,a-h, lo2,a-h-d)
-drawLists(s,lo2,a-h-d, lo,a-h-d)
-drawLists(s,lo,a-h-d, lo,0)
+drawLists(s,l,0,l,a)
+drawLists(s,lo ,0, l,0)
+drawLists(s,lo2 ,0, lo,0)
+drawLists(s,lo2,b,lo2,0)
+drawLists(s,lo, b, lo2,b)
+drawLists(s,lo, a-h, lo, b)
+drawLists(s,l,a,lo, a-h)
 
 s.save('julgran.stl')
