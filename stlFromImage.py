@@ -74,7 +74,7 @@ def getBorderLists(edgeIm):
    #  When we hit the first pixel, it might be connected to either
    #  (a,b), (a,c) or (d,b)  We should continue at a or d.
 
-   xs, ys = edgeIm.shape
+   ys, xs = edgeIm.shape
    for y in range(ys):
       for x in range(xs):
          if edgeIm[y,x]:
@@ -243,7 +243,7 @@ def removeStraightSections(larg):
       return ret
 
 def getPixels(im):
-   xs, ys = im.shape
+   ys, xs = im.shape
    l = []
    for y in range(ys):
       for x in range(xs):
@@ -257,7 +257,10 @@ def main(imname, outputFile):
    tmp = rgbimage.split()
    tmp = map(pilutil.fromimage, tmp)
 
-   redband, greenband = tmp[:2] # ignore blue and alpha channel
+   if len(tmp) > 2:
+      redband, greenband = tmp[:2] # ignore blue and alpha channel
+   else:
+      redband = greenband = tmp[0]
 
    print "Binarizing..."
    bim = -binarize(redband)
@@ -284,10 +287,12 @@ def main(imname, outputFile):
 
    sharedEdges = connEdge * edge
 
+   print "Labeling..."
    conn8 = [[1,1,1], [1,1,1],[1,1,1]]
    (labelShared, nshared) = ndimage.measurements.label(sharedEdges, conn8)
    (labelConns, nconns) = ndimage.measurements.label(c, conn8)
    (labelCuts, ncuts) = ndimage.measurements.label(edge, conn8)
+   print "Found %u cut(s) with %u connection(s)" % (ncuts, nconns)
 
    bridges = {}
    for i in range(1,nshared+1):
